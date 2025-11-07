@@ -1,0 +1,112 @@
+# 🌊 Water Pollution Detection using CNN - Week 2
+# Author: Tallapaneni Naga Varshini
+# Internship: Edunet Foundation | AICTE | Shell Skills4Future (Oct–Nov 2025)
+
+# -------------------------------
+# Step 1: Import Libraries
+# -------------------------------
+import tensorflow as tf
+from tensorflow.keras import layers, models
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+import matplotlib.pyplot as plt
+import os
+
+# -------------------------------
+# Step 2: Dataset Path and Preprocessing
+# -------------------------------
+base_dir = "dataset"
+
+train_datagen = ImageDataGenerator(
+    rescale=1./255,
+    rotation_range=20,
+    zoom_range=0.2,
+    horizontal_flip=True,
+    validation_split=0.2
+)
+
+train_data = train_datagen.flow_from_directory(
+    base_dir,
+    target_size=(128, 128),
+    batch_size=32,
+    class_mode='binary',
+    subset='training'
+)
+
+val_data = train_datagen.flow_from_directory(
+    base_dir,
+    target_size=(128, 128),
+    batch_size=32,
+    class_mode='binary',
+    subset='validation'
+)
+
+# -------------------------------
+# Step 3: Build CNN Model
+# -------------------------------
+model = models.Sequential([
+    layers.Conv2D(32, (3,3), activation='relu', input_shape=(128,128,3)),
+    layers.MaxPooling2D(2,2),
+
+    layers.Conv2D(64, (3,3), activation='relu'),
+    layers.MaxPooling2D(2,2),
+
+    layers.Conv2D(128, (3,3), activation='relu'),
+    layers.MaxPooling2D(2,2),
+
+    layers.Flatten(),
+    layers.Dense(128, activation='relu'),
+    layers.Dropout(0.3),
+    layers.Dense(1, activation='sigmoid')
+])
+
+# -------------------------------
+# Step 4: Compile the Model
+# -------------------------------
+model.compile(optimizer='adam',
+              loss='binary_crossentropy',
+              metrics=['accuracy'])
+
+# -------------------------------
+# Step 5: Train the Model
+# -------------------------------
+history = model.fit(
+    train_data,
+    validation_data=val_data,
+    epochs=10
+)
+
+# -------------------------------
+# Step 6: Evaluate the Model
+# -------------------------------
+loss, accuracy = model.evaluate(val_data)
+print(f"✅ Validation Accuracy: {accuracy*100:.2f}%")
+
+# -------------------------------
+# Step 7: Visualize Training Performance
+# -------------------------------
+plt.figure(figsize=(8,4))
+plt.subplot(1,2,1)
+plt.plot(history.history['accuracy'], label='Train Acc')
+plt.plot(history.history['val_accuracy'], label='Val Acc')
+plt.title('Model Accuracy')
+plt.xlabel('Epochs')
+plt.ylabel('Accuracy')
+plt.legend()
+
+plt.subplot(1,2,2)
+plt.plot(history.history['loss'], label='Train Loss')
+plt.plot(history.history['val_loss'], label='Val Loss')
+plt.title('Model Loss')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.legend()
+plt.show()
+
+# -------------------------------
+# Step 8: Save the Trained Model
+# -------------------------------
+os.makedirs("models", exist_ok=True)
+model.save("models/water_pollution_cnn_model.h5")
+
+print("💾 Model saved successfully as 'water_pollution_cnn_model.h5'")
+print("✅ Week 2 completed: CNN model built, trained, and evaluated successfully.")
